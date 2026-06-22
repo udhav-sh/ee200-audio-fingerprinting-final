@@ -1,7 +1,6 @@
 .venv/
 __pycache__/
 *.pyc
-.gemini/
 .agents/
 scratch/
 *test_core*
@@ -17,7 +16,5 @@ scratch/
 *.m4a
 *.ogg
 *.aac
-fingerprints.db
-*.zip
 fingerprints.db
 audio-fingerprint-identifying-python/db/fingerprints.db
