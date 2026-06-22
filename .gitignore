@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.pyc
+.gemini/
+.agents/
+scratch/
+*test_core*
+*.db-journal
+
+# Ignore Database files
+*.db
+
+# Ignore Audio files
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.ogg
+*.aac
+fingerprints.db
+*.zip
+fingerprints.db
+audio-fingerprint-identifying-python/db/fingerprints.db
