@@ -132,7 +132,7 @@ tab_identify, tab_db, tab_batch = st.tabs([
     "📊 Batch Identification & Export"
 ])
 
-# ----------------- TAB 1: Song Identification -----------------
+# TAB 1: Song Identification
 with tab_identify:
     st.header("Identify Audio")
 
@@ -351,7 +351,7 @@ with tab_identify:
                 st.warning(
                     "❌ No matching song found. Try increasing the duration or querying a different part of the audio.")
 
-# ----------------- TAB 2: Database Explorer & Manager -----------------
+# TAB 2: Database Explorer & Manager
 with tab_db:
     st.header("Database Manager")
 
@@ -522,7 +522,7 @@ with tab_db:
                         # Clean up memory so the app doesn't crash
                         plt.close(fig)
 
-# ----------------- TAB 3: Batch Identification & Export -----------------
+# TAB 3: Batch Identification & Export
 with tab_batch:
     st.header("Batch Song Identification")
     st.write("Upload multiple songs, run them through the identification pipeline, and export the results to CSV.")
