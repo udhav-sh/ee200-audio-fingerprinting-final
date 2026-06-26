@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # App configuration
 st.set_page_config(
-    page_title="AcousticID | Audio Fingerprinting",
+    page_title="Sonic Signatures | Magical Mystery Tune",
     page_icon="🎵",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -104,7 +104,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Custom header
-st.markdown("<div class='title-text'>🎵 AcousticID</div>",
+st.markdown("<div class='title-text'>🎵 Sonic Signatures | Magical Mystery Tune</div>",
             unsafe_allow_html=True)
 st.markdown("<div class='subtitle-text'>Audio Fingerprinting & Identification System using Constellation Peak Hashing</div>", unsafe_allow_html=True)
 
@@ -146,78 +146,23 @@ with tab_identify:
         </div>
         """, unsafe_allow_html=True)
 
-    # Input selections
-    col_input, col_settings = st.columns([2, 1])
-
-    with col_input:
-        input_type = st.radio("Choose Input Method", [
-                              "Upload Audio File", "Select Sample Song from DB Folder (Simulated Query)"])
-
-        uploaded_file = None
-        sample_filename = None
-
-        if input_type == "Upload Audio File":
-            uploaded_file = st.file_uploader(
-                "Upload query song (.mp3 or .wav)", type=["mp3", "wav"])
-        else:
-            # List actual .mp3 files in the DB directory
-            if os.path.exists(DB_DIR):
-                mp3_files = [f for f in os.listdir(
-                    DB_DIR) if f.endswith(".mp3")]
-                if mp3_files:
-                    sample_filename = st.selectbox(
-                        "Select song to query:", sorted(mp3_files))
-                else:
-                    st.warning(f"No .mp3 files found in DB folder: `{DB_DIR}`")
-            else:
-                st.error(f"DB Directory `{DB_DIR}` does not exist!")
-
-    with col_settings:
-        st.subheader("Query Constraints")
-        limit_seconds = st.slider("Query Duration Limit (seconds)", min_value=3, max_value=60, value=15, step=1,
-                                  help="Limits the processed sample size from the start of the audio.")
-
-        offset_seconds = 0
-        if input_type != "Upload Audio File" and sample_filename:
-            # Allow user to crop snippet at a specific start offset to test robustness to shifts
-            offset_seconds = st.slider("Query Start Offset (seconds)", min_value=0, max_value=120, value=0, step=1,
-                                       help="Crop a segment starting at this offset to simulate middle-of-song query matching.")
+# Input selections
+    uploaded_file = st.file_uploader(
+        "Upload query song (.mp3 or .wav)", type=["mp3", "wav"])
 
     # Execute Identification
     if st.button("Identify Song", type="primary", use_container_width=True):
         audio_data = None
         query_display_name = ""
 
-        if input_type == "Upload Audio File" and uploaded_file is not None:
+        if uploaded_file is not None:
             with st.spinner("Decoding uploaded audio..."):
                 try:
-                    # Load and crop
-                    audio_data = load_audio_from_uploaded(
-                        uploaded_file, limit=limit_seconds)
+                    # Load the audio (the 'limit' is now removed so it processes the whole file)
+                    audio_data = load_audio_from_uploaded(uploaded_file)
                     query_display_name = uploaded_file.name
                 except Exception as e:
                     st.error(f"Error loading audio file: {e}")
-        elif input_type != "Upload Audio File" and sample_filename:
-            with st.spinner(f"Loading {sample_filename}..."):
-                try:
-                    filepath = os.path.join(DB_DIR, sample_filename)
-                    # Use pydub to crop starting from offset_seconds
-                    audiofile = core.AudioSegment.from_file(filepath)
-                    cropped_audio = audiofile[offset_seconds *
-                                              1000: (offset_seconds + limit_seconds)*1000]
-
-                    data = np.frombuffer(cropped_audio._data, dtype=np.int16)
-                    channels = []
-                    for chn in range(cropped_audio.channels):
-                        channels.append(data[chn::cropped_audio.channels])
-
-                    audio_data = {
-                        "channels": channels,
-                        "Fs": cropped_audio.frame_rate
-                    }
-                    query_display_name = f"{sample_filename} (Crop: {offset_seconds}s - {offset_seconds + limit_seconds}s)"
-                except Exception as e:
-                    st.error(f"Error reading sample song: {e}")
         else:
             st.info("Please provide an audio file to identify.")
 
@@ -456,17 +401,6 @@ with tab_db:
                                "ID", "Filename", "File Hash (SHA1)", "Fingerprint Count"])
         st.dataframe(song_df, use_container_width=True, hide_index=True)
 
-        # Individual song deletion
-        st.subheader("Delete Song from Index")
-        delete_song_name = st.selectbox("Select song to delete:", [
-                                        s[1] for s in all_songs])
-        if st.button("Delete Selected Song"):
-            selected_song = next(
-                s for s in all_songs if s[1] == delete_song_name)
-            db.delete_song(selected_song[0])
-            st.success(f"Deleted '{delete_song_name}' from the index.")
-            time.sleep(1)
-            st.rerun()
     else:
         st.info(
             "Database is empty. Click 'Scan & Index DB Folder' above to search for songs.")
@@ -525,7 +459,7 @@ with tab_db:
 # TAB 3: Batch Identification & Export
 with tab_batch:
     st.header("Batch Song Identification")
-    st.write("Upload multiple songs, run them through the identification pipeline, and export the results to CSV.")
+    st.write("Upload multiple songs, run them through the identification pipeline, and get the results as CSV.")
 
     uploaded_files = st.file_uploader("Upload query files (.mp3 or .wav)", type=[
                                       "mp3", "wav"], accept_multiple_files=True)
@@ -547,7 +481,7 @@ with tab_batch:
                 try:
                     # Load audio
                     audio_data = load_audio_from_uploaded(
-                        file_obj, limit=limit_seconds)
+                        file_obj)
                     channel_samples = audio_data['channels'][0]
                     Fs = audio_data['Fs']
 
@@ -596,6 +530,6 @@ with tab_batch:
             st.download_button(
                 label="📥 Export Results to CSV",
                 data=csv_str,
-                file_name="fingerprinting_batch_results.csv",
+                file_name="results.csv",
                 mime="text/csv"
             )
